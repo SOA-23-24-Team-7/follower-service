@@ -7,7 +7,10 @@ import (
 	"follower-service/repository"
 	"follower-service/service"
 	"log"
+	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
 )
 
 func main(){
@@ -40,4 +43,16 @@ func main(){
 	if(controller!= nil){
 
 	}
+
+	// endpoints
+	router := mux.NewRouter().StrictSlash(true)
+
+	// endpoints for following
+	router.HandleFunc("/followers/follow/{userID}/{followerID}", controller.FollowUser).Methods("POST")
+	router.HandleFunc("/followers/unfollow/{userID}/{followerID}", controller.UnfollowUser).Methods("POST")
+	router.HandleFunc("/followers/getFollowers/{userID}", controller.GetFollowers).Methods("POST")
+
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
+	println("Server starting")
+	log.Fatal(http.ListenAndServe(":8095", router)) 
 }
