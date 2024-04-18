@@ -2,10 +2,11 @@ package controller
 
 import (
 	"encoding/json"
-	"follwer-service/model"
-	"follwer-service/service"
+	"follower-service/model"
+	"follower-service/service"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -24,13 +25,27 @@ func NewUserController(userService *service.UserService, logger *log.Logger) *Us
 
 func (uc *UserController) FollowUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID := vars["userID"]
-	followerID := vars["followerID"]
+	userIDStr := vars["userID"]
+	followerIDStr := vars["followerID"]
 
-	user := &model.User{UserID: userID}
-	follower := &model.User{UserID: followerID}
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting userID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	err := uc.userService.Follow(user, follower)
+	followerID, err := strconv.Atoi(followerIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting followerID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user := &model.User{UserId: userID}
+	follower := &model.User{UserId: followerID}
+
+	err = uc.userService.Follow(user, follower)
 	if err != nil {
 		uc.logger.Println("Error following user:", err)
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -42,13 +57,27 @@ func (uc *UserController) FollowUser(rw http.ResponseWriter, r *http.Request) {
 
 func (uc *UserController) UnfollowUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID := vars["userID"]
-	unfollowerID := vars["unfollowerID"]
+	userIDStr := vars["userID"]
+	followerIDStr := vars["followerID"]
 
-	user := &model.User{UserID: userID}
-	unfollower := &model.User{UserID: unfollowerID}
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting userID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	err := uc.userService.Unfollow(user, unfollower)
+	unfollowerID, err := strconv.Atoi(followerIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting followerID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user := &model.User{UserId: userID}
+	unfollower := &model.User{UserId: unfollowerID}
+
+	err = uc.userService.Unfollow(user, unfollower)
 	if err != nil {
 		uc.logger.Println("Error unfollowing user:", err)
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -60,9 +89,16 @@ func (uc *UserController) UnfollowUser(rw http.ResponseWriter, r *http.Request) 
 
 func (uc *UserController) GetFollowers(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID := vars["userID"]
+	userIDStr := vars["userID"]
 
-	user := &model.User{UserID: userID}
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting userID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user := &model.User{UserId: userID}
 
 	followers, err := uc.userService.GetFollowers(user)
 	if err != nil {
