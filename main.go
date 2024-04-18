@@ -47,7 +47,8 @@ func main() {
 	// endpoints for following
 	router.HandleFunc("/followers/follow/{userID}/{followerID}", controller.FollowUser).Methods("POST")
 	router.HandleFunc("/followers/unfollow/{userID}/{followerID}", controller.UnfollowUser).Methods("POST")
-	router.HandleFunc("/followers/getFollowers/{userID}", controller.GetFollowers).Methods("POST")
+	router.HandleFunc("/followers/getFollowers/{userID}", controller.GetFollowers).Methods("GET")
+	router.HandleFunc("/followers/getFollowing/{userID}", controller.GetFollowings).Methods("GET")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 	println("Server starting")
