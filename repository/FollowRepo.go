@@ -4,7 +4,8 @@ import (
 	"context"
 	"follower-service/model"
 	"log"
-	"os"
+
+	//"os"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -12,13 +13,19 @@ import (
 type UserRepository struct {
 	driver neo4j.DriverWithContext
 	logger *log.Logger
+	databaseName string
 }
 
 func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
-	uri := os.Getenv("NEO4J_DB")
-	user := os.Getenv("NEO4J_USERNAME")
-	pass := os.Getenv("NEO4J_PASS")
+	// uri := os.Getenv("NEO4J_DB")
+	// user := os.Getenv("NEO4J_USERNAME")
+	// pass := os.Getenv("NEO4J_PASS")
+	// auth := neo4j.BasicAuth(user, pass, "")
+	uri := "bolt://localhost:7687" 
+	user := "neo4j"                 
+	pass := "neo4j"         
 	auth := neo4j.BasicAuth(user, pass, "")
+	
 
 	driver, err := neo4j.NewDriverWithContext(uri, auth)
 	if err != nil {
@@ -29,12 +36,13 @@ func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
 	return &UserRepository{
 		driver: driver,
 		logger: logger,
+		databaseName: "soa-foolowers",
 	}, nil
 }
 
 func (ur *UserRepository) Follow(user, follower *model.User) error {
 	ctx := context.Background()
-	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: "neo4j"})
+	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
 	defer session.Close(ctx)
 
 	savedUser, err := session.ExecuteWrite(ctx,
@@ -63,7 +71,7 @@ func (ur *UserRepository) Follow(user, follower *model.User) error {
 
 func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 	ctx := context.Background()
-	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: "neo4j"})
+	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
 	defer session.Close(ctx)
 
 	savedUser, err := session.ExecuteWrite(ctx,
