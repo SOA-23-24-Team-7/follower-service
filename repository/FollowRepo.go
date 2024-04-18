@@ -11,8 +11,8 @@ import (
 )
 
 type UserRepository struct {
-	driver neo4j.DriverWithContext
-	logger *log.Logger
+	driver       neo4j.DriverWithContext
+	logger       *log.Logger
 	databaseName string
 }
 
@@ -21,11 +21,10 @@ func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
 	// user := os.Getenv("NEO4J_USERNAME")
 	// pass := os.Getenv("NEO4J_PASS")
 	// auth := neo4j.BasicAuth(user, pass, "")
-	uri := "bolt://localhost:7687" 
-	user := "neo4j"                 
-	pass := "neo4j"         
+	uri := "bolt://localhost:7687"
+	user := "neo4j"
+	pass := "neo4j"
 	auth := neo4j.BasicAuth(user, pass, "")
-	
 
 	driver, err := neo4j.NewDriverWithContext(uri, auth)
 	if err != nil {
@@ -34,8 +33,8 @@ func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
 	}
 
 	return &UserRepository{
-		driver: driver,
-		logger: logger,
+		driver:       driver,
+		logger:       logger,
 		databaseName: "soa-foolowers",
 	}, nil
 }
@@ -96,4 +95,39 @@ func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 	}
 	ur.logger.Println(savedUser.(string))
 	return nil
+}
+
+func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) {
+	ctx := context.Background()
+	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
+	defer session.Close(ctx)
+
+	f, err := session.ExecuteWrite(ctx,
+		func(transaction neo4j.ManagedTransaction) (any, error) {
+			result, err := transaction.Run(ctx,
+				"MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f.user",
+				map[string]any{"User": user})
+			if err != nil {
+				return nil, err
+			}
+
+			var followers []*model.User
+			for result.Next(ctx) {
+				record := result.Record()
+				follower, ok := record.Get("f.user")
+				if !ok {
+					continue
+				}
+				followers = append(followers, follower.(*model.User))
+			}
+			return followers, result.Err()
+
+		})
+
+	if err != nil {
+		ur.logger.Println("Error querying search:", err)
+		return nil, err
+	}
+	return f.([]*model.User), nil
+
 }
