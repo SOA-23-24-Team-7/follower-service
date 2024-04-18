@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"follower-service/model"
 	"log"
 
@@ -101,44 +100,55 @@ func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 
 func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) {
 	ctx := context.Background()
-	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
+	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: "neo4j"})
 	defer session.Close(ctx)
 
-	f, err := session.ExecuteWrite(ctx,
+	// ExecuteRead for read transactions (Read and queries)
+	userResults, err := session.ExecuteRead(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f",
-				map[string]any{"userID": user.UserId})
+				`MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f`,
+				map[string]interface{}{"userID": user.UserId})
 			if err != nil {
-				println(err)
 				return nil, err
 			}
 
 			var followers []*model.User
 			for result.Next(ctx) {
 				record := result.Record()
-				follower, ok := record.Get("f")
 				
+				//log.Println(record)
+				
+				rawUser, ok := record.Get("f")
+				log.Println(rawUser)
+   			 	if !ok {
+       			 log.Println("Error: user node is missing")
+        		continue
+    			}
+				//extracting node
+				userNode, ok := rawUser.(neo4j.Node)
 				if !ok {
-					continue
+					return nil, nil
 				}
-				followers = append(followers, follower.(*model.User)) 
+    			userIdStr, ok := userNode.Props["userId"]
+    			if !ok || userIdStr == nil {
+        			// Handle the nil or missing userId appropriately
+        			log.Println("Error: userId is missing or nil")
+        			continue
+    			}
+
+				followers = append(followers, &model.User{
+					UserId: int(userIdStr.(int64)),	
+				})
 			}
-			return followers, result.Err()
-
+			return followers, nil
+			
 		})
-
 	if err != nil {
 		ur.logger.Println("Error querying search:", err)
 		return nil, err
 	}
-
-	followers, ok := f.([]*model.User)
-	if !ok {
-		return nil, fmt.Errorf("failed to type assert followers to []*model.User")
-	}
-
-	return followers, nil
+	return userResults.([]*model.User), nil
 }
 
 
