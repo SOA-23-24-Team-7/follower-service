@@ -158,32 +158,54 @@ func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) 
 	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
 	defer session.Close(ctx)
 
-	f, err := session.ExecuteWrite(ctx,
+	
+	userResults, err := session.ExecuteRead(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (u:User {userId: $userID})-[:FOLLOWS]->(f:User) RETURN f",
-				map[string]any{"User": user})
+				`MATCH (u:User {userId: $userID})-[:FOLLOWS]->(f:User) RETURN f`,
+				map[string]interface{}{"userID": user.UserId})
 			if err != nil {
 				return nil, err
 			}
 
-			var followings []*model.User
+			var followers []*model.User
 			for result.Next(ctx) {
 				record := result.Record()
-				follower, ok := record.Get("f")
-				if !ok {
-					continue
-				}
-				followings = append(followings, follower.(*model.User))
-			}
-			return followings, result.Err()
+				
+				//log.Println(record)
+				
+				rawUser, ok := record.Get("f")
+   			 	if !ok {
+       			 log.Println("Error: user node is missing")
+        		continue
+    			}
+				//extracting node
+				userNode, ok := rawUser.(neo4j.Node)
 
+				if !ok {
+					return nil, nil
+				}
+
+    			userIdStr, ok := userNode.Props["userId"]
+    			if !ok || userIdStr == nil {
+        			// Handle the nil or missing userId appropriately
+        			log.Println("Error: userId is missing or nil")
+        			continue
+    			}
+
+				followers = append(followers, &model.User{
+					UserId: int(userIdStr.(int64)),	
+				})
+
+			}
+			return followers, nil
+			
 		})
 
 	if err != nil {
 		ur.logger.Println("Error querying search:", err)
 		return nil, err
 	}
-	return f.([]*model.User), nil
+	return userResults.([]*model.User), nil
 
 }
