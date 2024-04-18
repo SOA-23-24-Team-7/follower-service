@@ -105,7 +105,7 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 	f, err := session.ExecuteWrite(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f.user",
+				"MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f",
 				map[string]any{"User": user})
 			if err != nil {
 				return nil, err
@@ -114,13 +114,48 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 			var followers []*model.User
 			for result.Next(ctx) {
 				record := result.Record()
-				follower, ok := record.Get("f.user")
+				follower, ok := record.Get("f")
 				if !ok {
 					continue
 				}
 				followers = append(followers, follower.(*model.User))
 			}
 			return followers, result.Err()
+
+		})
+
+	if err != nil {
+		ur.logger.Println("Error querying search:", err)
+		return nil, err
+	}
+	return f.([]*model.User), nil
+
+}
+
+func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) {
+	ctx := context.Background()
+	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
+	defer session.Close(ctx)
+
+	f, err := session.ExecuteWrite(ctx,
+		func(transaction neo4j.ManagedTransaction) (any, error) {
+			result, err := transaction.Run(ctx,
+				"MATCH (u:User {userId: $userID})-[:FOLLOWS]->(f:User) RETURN f",
+				map[string]any{"User": user})
+			if err != nil {
+				return nil, err
+			}
+
+			var followings []*model.User
+			for result.Next(ctx) {
+				record := result.Record()
+				follower, ok := record.Get("f")
+				if !ok {
+					continue
+				}
+				followings = append(followings, follower.(*model.User))
+			}
+			return followings, result.Err()
 
 		})
 
