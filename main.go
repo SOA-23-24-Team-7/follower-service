@@ -40,9 +40,7 @@ func main(){
 	//kontroler
 	controllerLogger := log.New(os.Stdout, "[movie-controller] ", log.LstdFlags)
 	controller := controller.NewUserController(service,controllerLogger)
-	if(controller!= nil){
-
-	}
+	
 
 	// endpoints
 	router := mux.NewRouter().StrictSlash(true)

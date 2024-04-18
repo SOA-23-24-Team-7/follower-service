@@ -26,6 +26,7 @@ func NewUserController(userService *service.UserService, logger *log.Logger) *Us
 func (uc *UserController) FollowUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userIDStr := vars["userID"]
+	
 	followerIDStr := vars["followerID"]
 
 	userID, err := strconv.Atoi(userIDStr)
@@ -34,7 +35,7 @@ func (uc *UserController) FollowUser(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	log.Println(userID)
 	followerID, err := strconv.Atoi(followerIDStr)
 	if err != nil {
 		uc.logger.Println("Error converting followerID to int:", err)

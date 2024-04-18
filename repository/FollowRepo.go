@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"follower-service/model"
 	"log"
 
@@ -23,7 +24,7 @@ func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
 	// auth := neo4j.BasicAuth(user, pass, "")
 	uri := "bolt://localhost:7687"
 	user := "neo4j"
-	pass := "neo4j"
+	pass := "password"
 	auth := neo4j.BasicAuth(user, pass, "")
 
 	driver, err := neo4j.NewDriverWithContext(uri, auth)
@@ -35,7 +36,7 @@ func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
 	return &UserRepository{
 		driver:       driver,
 		logger:       logger,
-		databaseName: "soa-foolowers",
+		databaseName: "neo4j",
 	}, nil
 }
 
@@ -43,13 +44,14 @@ func (ur *UserRepository) Follow(user, follower *model.User) error {
 	ctx := context.Background()
 	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
 	defer session.Close(ctx)
-
+	println(user.UserId)
 	savedUser, err := session.ExecuteWrite(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (u:User {userId: $userID}), (f:User {userId: $followerID}) "+
-					"CREATE (f)-[:FOLLOWS]->(u)",
-				map[string]any{"UserId": user.UserId, "followerID": follower.UserId})
+				"MERGE (u:User {userId: $userId}) "+
+				"MERGE (f:User {userId: $followerId}) "+
+				"CREATE (f)-[:FOLLOWS]->(u)",
+				map[string]any{"userId": user.UserId, "followerId": follower.UserId})
 			if err != nil {
 				return nil, err
 			}
@@ -64,7 +66,7 @@ func (ur *UserRepository) Follow(user, follower *model.User) error {
 		ur.logger.Println("Error inserting user:", err)
 		return err
 	}
-	ur.logger.Println(savedUser.(string))
+	ur.logger.Println(savedUser)
 	return nil
 }
 
@@ -105,20 +107,21 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 	f, err := session.ExecuteWrite(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f.user",
-				map[string]any{"User": user})
+				"MATCH (f:User)-[:FOLLOWS]->(u:User {userId: $userID}) RETURN f",
+				map[string]any{"userID": user.UserId})
 			if err != nil {
+				println(err)
 				return nil, err
 			}
 
 			var followers []*model.User
 			for result.Next(ctx) {
 				record := result.Record()
-				follower, ok := record.Get("f.user")
+				follower, ok := record.Get("f")
 				if !ok {
 					continue
 				}
-				followers = append(followers, follower.(*model.User))
+				followers = append(followers, follower.(*model.User)) 
 			}
 			return followers, result.Err()
 
@@ -128,6 +131,12 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 		ur.logger.Println("Error querying search:", err)
 		return nil, err
 	}
-	return f.([]*model.User), nil
 
+	followers, ok := f.([]*model.User)
+	if !ok {
+		return nil, fmt.Errorf("failed to type assert followers to []*model.User")
+	}
+
+	return followers, nil
 }
+
