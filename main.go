@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func main(){
+func main() {
 	port := os.Getenv("PORT") // ako budemo uzimali preko ovih varijabli
 	if len(port) == 0 {
 		port = "8095" // novi port
@@ -23,10 +23,10 @@ func main(){
 	// defer cancel()
 
 	//Initialize the logger we are going to use, with prefix and datetime for every log
-	logger := log.New(os.Stdout, "[movie-api] ", log.LstdFlags)
-	storeLogger := log.New(os.Stdout, "[movie-store] ", log.LstdFlags)
+	logger := log.New(os.Stdout, "[follower-api] ", log.LstdFlags)
+	storeLogger := log.New(os.Stdout, "[follower-store] ", log.LstdFlags)
 
-	// NoSQL: Initialize Movie Repository store
+	// NoSQL: Initialize follower Repository store
 	store, err := repository.NewUserRepository(storeLogger)
 	if err != nil {
 		logger.Fatal(err)
@@ -34,13 +34,12 @@ func main(){
 	// defer store.CloseDriverConnection(timeoutContext)
 	// store.CheckConnection()
 
-	serviceLogger := log.New(os.Stdout, "[movie-service] ", log.LstdFlags)
-	service := service.NewUserService(store,serviceLogger)
+	serviceLogger := log.New(os.Stdout, "[follower-service] ", log.LstdFlags)
+	service := service.NewUserService(store, serviceLogger)
 
 	//kontroler
-	controllerLogger := log.New(os.Stdout, "[movie-controller] ", log.LstdFlags)
-	controller := controller.NewUserController(service,controllerLogger)
-	
+	controllerLogger := log.New(os.Stdout, "[follower-controller] ", log.LstdFlags)
+	controller := controller.NewUserController(service, controllerLogger)
 
 	// endpoints
 	router := mux.NewRouter().StrictSlash(true)
@@ -48,9 +47,10 @@ func main(){
 	// endpoints for following
 	router.HandleFunc("/followers/follow/{userID}/{followerID}", controller.FollowUser).Methods("POST")
 	router.HandleFunc("/followers/unfollow/{userID}/{followerID}", controller.UnfollowUser).Methods("POST")
-	router.HandleFunc("/followers/getFollowers/{userID}", controller.GetFollowers).Methods("POST")
+	router.HandleFunc("/followers/getFollowers/{userID}", controller.GetFollowers).Methods("GET")
+	router.HandleFunc("/followers/getFollowing/{userID}", controller.GetFollowings).Methods("GET")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 	println("Server starting")
-	log.Fatal(http.ListenAndServe(":8095", router)) 
+	log.Fatal(http.ListenAndServe(":8095", router))
 }

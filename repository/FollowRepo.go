@@ -48,8 +48,8 @@ func (ur *UserRepository) Follow(user, follower *model.User) error {
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
 				"MERGE (u:User {userId: $userId}) "+
-				"MERGE (f:User {userId: $followerId}) "+
-				"CREATE (f)-[:FOLLOWS]->(u)",
+					"MERGE (f:User {userId: $followerId}) "+
+					"CREATE (f)-[:FOLLOWS]->(u)",
 				map[string]any{"userId": user.UserId, "followerId": follower.UserId})
 			if err != nil {
 				return nil, err
@@ -77,9 +77,9 @@ func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 	savedUser, err := session.ExecuteWrite(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (f:User {userId: $followerID})-[r:FOLLOWS]->(u:User {userId: $userID}) "+
+				"MATCH (f:User {userId: $unfollowerId})-[r:FOLLOWS]->(u:User {userId: $userId}) "+
 					"DELETE r",
-				map[string]any{"UserId": user.UserId, "UnfollowerID": unfollower.UserId})
+				map[string]any{"userId": user.UserId, "unfollowerId": unfollower.UserId})
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +94,7 @@ func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 		ur.logger.Println("Error inserting user:", err)
 		return err
 	}
-	ur.logger.Println(savedUser.(string))
+	ur.logger.Println(savedUser)
 	return nil
 }
 
@@ -120,16 +120,17 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 				//log.Println(record)
 				
 				rawUser, ok := record.Get("f")
-				log.Println(rawUser)
    			 	if !ok {
        			 log.Println("Error: user node is missing")
         		continue
     			}
 				//extracting node
 				userNode, ok := rawUser.(neo4j.Node)
+
 				if !ok {
 					return nil, nil
 				}
+
     			userIdStr, ok := userNode.Props["userId"]
     			if !ok || userIdStr == nil {
         			// Handle the nil or missing userId appropriately
@@ -140,6 +141,7 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 				followers = append(followers, &model.User{
 					UserId: int(userIdStr.(int64)),	
 				})
+
 			}
 			return followers, nil
 			
@@ -150,7 +152,6 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 	}
 	return userResults.([]*model.User), nil
 }
-
 
 func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) {
 	ctx := context.Background()
