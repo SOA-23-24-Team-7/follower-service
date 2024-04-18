@@ -110,3 +110,26 @@ func (uc *UserController) GetFollowers(rw http.ResponseWriter, r *http.Request) 
 
 	json.NewEncoder(rw).Encode(followers)
 }
+
+func (uc *UserController) GetFollowings(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userIDStr := vars["userID"]
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting userID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user := &model.User{UserId: userID}
+
+	followers, err := uc.userService.GetFollowing(user)
+	if err != nil {
+		uc.logger.Println("Error getting followings:", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(rw).Encode(followers)
+}

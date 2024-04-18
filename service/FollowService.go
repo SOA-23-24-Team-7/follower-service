@@ -47,3 +47,13 @@ func (us *UserService) GetFollowers(user *model.User) ([]*model.User, error) {
 	us.logger.Println("Retrieved followers successfully")
 	return followers, nil
 }
+
+func (us *UserService) GetFollowing(user *model.User) ([]*model.User, error) {
+	followers, err := us.repo.GetFollowing(user)
+	if err != nil {
+		us.logger.Println("Error getting followers:", err)
+		return nil, err
+	}
+	us.logger.Println("Retrieved followers successfully")
+	return followers, nil
+}
