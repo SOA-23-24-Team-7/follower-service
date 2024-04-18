@@ -3,7 +3,9 @@ package main
 import (
 	//"FOLLOWER-SERVICE/controller"
 
+	"follower-service/controller"
 	"follower-service/repository"
+	"follower-service/service"
 	"log"
 	"os"
 )
@@ -29,4 +31,13 @@ func main(){
 	// defer store.CloseDriverConnection(timeoutContext)
 	// store.CheckConnection()
 
+	serviceLogger := log.New(os.Stdout, "[movie-service] ", log.LstdFlags)
+	service := service.NewUserService(store,serviceLogger)
+
+	//kontroler
+	controllerLogger := log.New(os.Stdout, "[movie-controller] ", log.LstdFlags)
+	controller := controller.NewUserController(service,controllerLogger)
+	if(controller!= nil){
+
+	}
 }
