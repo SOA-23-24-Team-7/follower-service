@@ -49,8 +49,8 @@ func (ur *UserRepository) Follow(user, follower *model.User) error {
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
 				"MERGE (u:User {userId: $userId}) "+
-				"MERGE (f:User {userId: $followerId}) "+
-				"CREATE (f)-[:FOLLOWS]->(u)",
+					"MERGE (f:User {userId: $followerId}) "+
+					"CREATE (f)-[:FOLLOWS]->(u)",
 				map[string]any{"userId": user.UserId, "followerId": follower.UserId})
 			if err != nil {
 				return nil, err
@@ -78,9 +78,9 @@ func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 	savedUser, err := session.ExecuteWrite(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (f:User {userId: $followerID})-[r:FOLLOWS]->(u:User {userId: $userID}) "+
+				"MATCH (f:User {userId: $unfollowerId})-[r:FOLLOWS]->(u:User {userId: $userId}) "+
 					"DELETE r",
-				map[string]any{"UserId": user.UserId, "UnfollowerID": unfollower.UserId})
+				map[string]any{"userId": user.UserId, "unfollowerId": unfollower.UserId})
 			if err != nil {
 				return nil, err
 			}
@@ -95,7 +95,7 @@ func (ur *UserRepository) Unfollow(user, unfollower *model.User) error {
 		ur.logger.Println("Error inserting user:", err)
 		return err
 	}
-	ur.logger.Println(savedUser.(string))
+	ur.logger.Println(savedUser)
 	return nil
 }
 
@@ -118,11 +118,11 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 			for result.Next(ctx) {
 				record := result.Record()
 				follower, ok := record.Get("f")
-				
+
 				if !ok {
 					continue
 				}
-				followers = append(followers, follower.(*model.User)) 
+				followers = append(followers, follower.(*model.User))
 			}
 			return followers, result.Err()
 
@@ -140,7 +140,6 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 
 	return followers, nil
 }
-
 
 func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) {
 	ctx := context.Background()
