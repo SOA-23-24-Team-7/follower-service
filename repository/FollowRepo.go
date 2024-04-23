@@ -17,11 +17,7 @@ type UserRepository struct {
 }
 
 func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
-	// uri := os.Getenv("NEO4J_DB")
-	// user := os.Getenv("NEO4J_USERNAME")
-	// pass := os.Getenv("NEO4J_PASS")
-	// auth := neo4j.BasicAuth(user, pass, "")
-	uri := "bolt://localhost:7687"
+	uri := "bolt://follower-database:7687"
 	user := "neo4j"
 	pass := "password"
 	auth := neo4j.BasicAuth(user, pass, "")
@@ -116,14 +112,14 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 			var followers []*model.User
 			for result.Next(ctx) {
 				record := result.Record()
-				
+
 				//log.Println(record)
-				
+
 				rawUser, ok := record.Get("f")
-   			 	if !ok {
-       			 log.Println("Error: user node is missing")
-        		continue
-    			}
+				if !ok {
+					log.Println("Error: user node is missing")
+					continue
+				}
 				//extracting node
 				userNode, ok := rawUser.(neo4j.Node)
 
@@ -131,20 +127,20 @@ func (ur *UserRepository) GetFollowers(user *model.User) ([]*model.User, error) 
 					return nil, nil
 				}
 
-    			userIdStr, ok := userNode.Props["userId"]
-    			if !ok || userIdStr == nil {
-        			// Handle the nil or missing userId appropriately
-        			log.Println("Error: userId is missing or nil")
-        			continue
-    			}
+				userIdStr, ok := userNode.Props["userId"]
+				if !ok || userIdStr == nil {
+					// Handle the nil or missing userId appropriately
+					log.Println("Error: userId is missing or nil")
+					continue
+				}
 
 				followers = append(followers, &model.User{
-					UserId: int(userIdStr.(int64)),	
+					UserId: int(userIdStr.(int64)),
 				})
 
 			}
 			return followers, nil
-			
+
 		})
 	if err != nil {
 		ur.logger.Println("Error querying search:", err)
@@ -158,7 +154,6 @@ func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) 
 	session := ur.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: ur.databaseName})
 	defer session.Close(ctx)
 
-	
 	userResults, err := session.ExecuteRead(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
@@ -171,14 +166,14 @@ func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) 
 			var followers []*model.User
 			for result.Next(ctx) {
 				record := result.Record()
-				
+
 				//log.Println(record)
-				
+
 				rawUser, ok := record.Get("f")
-   			 	if !ok {
-       			 log.Println("Error: user node is missing")
-        		continue
-    			}
+				if !ok {
+					log.Println("Error: user node is missing")
+					continue
+				}
 				//extracting node
 				userNode, ok := rawUser.(neo4j.Node)
 
@@ -186,20 +181,20 @@ func (ur *UserRepository) GetFollowing(user *model.User) ([]*model.User, error) 
 					return nil, nil
 				}
 
-    			userIdStr, ok := userNode.Props["userId"]
-    			if !ok || userIdStr == nil {
-        			// Handle the nil or missing userId appropriately
-        			log.Println("Error: userId is missing or nil")
-        			continue
-    			}
+				userIdStr, ok := userNode.Props["userId"]
+				if !ok || userIdStr == nil {
+					// Handle the nil or missing userId appropriately
+					log.Println("Error: userId is missing or nil")
+					continue
+				}
 
 				followers = append(followers, &model.User{
-					UserId: int(userIdStr.(int64)),	
+					UserId: int(userIdStr.(int64)),
 				})
 
 			}
 			return followers, nil
-			
+
 		})
 
 	if err != nil {
