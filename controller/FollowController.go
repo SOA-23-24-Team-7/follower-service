@@ -26,7 +26,7 @@ func NewUserController(userService *service.UserService, logger *log.Logger) *Us
 func (uc *UserController) FollowUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userIDStr := vars["userID"]
-	
+
 	followerIDStr := vars["followerID"]
 
 	userID, err := strconv.Atoi(userIDStr)
@@ -102,10 +102,15 @@ func (uc *UserController) GetFollowers(rw http.ResponseWriter, r *http.Request) 
 	user := &model.User{UserId: userID}
 
 	followers, err := uc.userService.GetFollowers(user)
+
 	if err != nil {
 		uc.logger.Println("Error getting followers:", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	if followers == nil {
+		followers = []*model.User{}
 	}
 
 	json.NewEncoder(rw).Encode(followers)
@@ -129,6 +134,37 @@ func (uc *UserController) GetFollowings(rw http.ResponseWriter, r *http.Request)
 		uc.logger.Println("Error getting followings:", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	if followers == nil {
+		followers = []*model.User{}
+	}
+
+	json.NewEncoder(rw).Encode(followers)
+}
+
+func (uc *UserController) GetFollowerSuggestions(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userIDStr := vars["userID"]
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		uc.logger.Println("Error converting userID to int:", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user := &model.User{UserId: userID}
+
+	followers, err := uc.userService.GetFollowerSuggestions(user)
+	if err != nil {
+		uc.logger.Println("Error getting follower suggestions:", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if followers == nil {
+		followers = []*model.User{}
 	}
 
 	json.NewEncoder(rw).Encode(followers)
