@@ -17,7 +17,7 @@ type UserRepository struct {
 }
 
 func NewUserRepository(logger *log.Logger) (*UserRepository, error) {
-	uri := "bolt://localhost:7687"
+	uri := "bolt://follower-database:7687"
 	user := "neo4j"
 	pass := "password"
 	auth := neo4j.BasicAuth(user, pass, "")
