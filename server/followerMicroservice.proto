@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package server;
+
+option go_package = ".";
+
+service FollowerMicroservice {
+    rpc FollowUser(FollowRequest) returns (StringMessage) {}
+    rpc UnfollowUser(FollowRequest) returns (StringMessage) {}
+    rpc GetFollowers(FollowerIdRequest) returns (FollowerListResponse) {}
+    rpc GetFollowings(FollowerIdRequest) returns (FollowerListResponse) {}
+    rpc GetFollowerSuggestions(FollowerIdRequest) returns (FollowerListResponse) {}
+}
+
+message StringMessage {
+    string message = 1;
+}
+
+message FollowRequest {
+    int64 userID = 1;
+    int64 followerID = 2;
+}
+
+message FollowerIdRequest {
+    int64 id = 1;
+}
+message FollowerResponse{
+    int64 id = 1;
+}
+
+message FollowerListResponse{
+    repeated FollowerResponse followers = 1;
+}
