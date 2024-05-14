@@ -228,7 +228,7 @@ func _FollowerMicroservice_GetFollowerSuggestions_Handler(srv interface{}, ctx c
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var FollowerMicroservice_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "server.FollowerMicroservice",
+	ServiceName: "FollowerMicroservice",
 	HandlerType: (*FollowerMicroserviceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
