@@ -13,7 +13,7 @@ type FollowerMicroservice struct {
 	FollowerService *service.UserService
 }
 
-func (s *FollowerMicroservice) FollowUser(ctx context.Context, in *FollowRequest) (*StringMessage, error) {
+func (s *FollowerMicroservice) FollowUser(ctx context.Context, in *FollowRequest) (*FollowerStringMessage, error) {
 
 	user := &model.User{UserId: int(in.UserID)}
 	follower := &model.User{UserId: int(in.FollowerID)}
@@ -22,14 +22,14 @@ func (s *FollowerMicroservice) FollowUser(ctx context.Context, in *FollowRequest
 
 	if err != nil {
 		fmt.Println("Error while following:", err)
-		message := &StringMessage{Message: "Error while following"}
+		message := &FollowerStringMessage{Message: "Error while following"}
 		return message, err
 	}
 
-	message := &StringMessage{Message: "Successfully followed"}
+	message := &FollowerStringMessage{Message: "Successfully followed"}
 	return message, err
 }
-func (s *FollowerMicroservice) UnfollowUser(ctx context.Context, in *FollowRequest) (*StringMessage, error) {
+func (s *FollowerMicroservice) UnfollowUser(ctx context.Context, in *FollowRequest) (*FollowerStringMessage, error) {
 	user := &model.User{UserId: int(in.UserID)}
 	follower := &model.User{UserId: int(in.FollowerID)}
 
@@ -37,11 +37,11 @@ func (s *FollowerMicroservice) UnfollowUser(ctx context.Context, in *FollowReque
 
 	if err != nil {
 		fmt.Println("Error while unfollowing:", err)
-		message := &StringMessage{Message: "Error while unfollowing"}
+		message := &FollowerStringMessage{Message: "Error while unfollowing"}
 		return message, err
 	}
 
-	message := &StringMessage{Message: "Successfully unfollowed"}
+	message := &FollowerStringMessage{Message: "Successfully unfollowed"}
 	return message, err
 }
 func (s *FollowerMicroservice) GetFollowers(ctx context.Context, in *FollowerIdRequest) (*FollowerListResponse, error) {

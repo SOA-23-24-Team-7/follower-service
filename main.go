@@ -67,12 +67,12 @@ func main() {
 		FollowerService: service,
 	})
 
-	listener, err := net.Listen("tcp", ":8088")
+	listener, err := net.Listen("tcp", ":8095")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	log.Println("gRPC server listening on port :8088")
+	log.Println("gRPC server listening on port :8095")
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve gRPC server: %v", err)
 	}

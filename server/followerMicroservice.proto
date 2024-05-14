@@ -5,14 +5,14 @@ package server;
 option go_package = ".";
 
 service FollowerMicroservice {
-    rpc FollowUser(FollowRequest) returns (StringMessage) {}
-    rpc UnfollowUser(FollowRequest) returns (StringMessage) {}
+    rpc FollowUser(FollowRequest) returns (FollowerStringMessage) {}
+    rpc UnfollowUser(FollowRequest) returns (FollowerStringMessage) {}
     rpc GetFollowers(FollowerIdRequest) returns (FollowerListResponse) {}
     rpc GetFollowings(FollowerIdRequest) returns (FollowerListResponse) {}
     rpc GetFollowerSuggestions(FollowerIdRequest) returns (FollowerListResponse) {}
 }
 
-message StringMessage {
+message FollowerStringMessage {
     string message = 1;
 }
 

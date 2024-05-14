@@ -30,8 +30,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FollowerMicroserviceClient interface {
-	FollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*StringMessage, error)
-	UnfollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*StringMessage, error)
+	FollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowerStringMessage, error)
+	UnfollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowerStringMessage, error)
 	GetFollowers(ctx context.Context, in *FollowerIdRequest, opts ...grpc.CallOption) (*FollowerListResponse, error)
 	GetFollowings(ctx context.Context, in *FollowerIdRequest, opts ...grpc.CallOption) (*FollowerListResponse, error)
 	GetFollowerSuggestions(ctx context.Context, in *FollowerIdRequest, opts ...grpc.CallOption) (*FollowerListResponse, error)
@@ -45,8 +45,8 @@ func NewFollowerMicroserviceClient(cc grpc.ClientConnInterface) FollowerMicroser
 	return &followerMicroserviceClient{cc}
 }
 
-func (c *followerMicroserviceClient) FollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*StringMessage, error) {
-	out := new(StringMessage)
+func (c *followerMicroserviceClient) FollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowerStringMessage, error) {
+	out := new(FollowerStringMessage)
 	err := c.cc.Invoke(ctx, FollowerMicroservice_FollowUser_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (c *followerMicroserviceClient) FollowUser(ctx context.Context, in *FollowR
 	return out, nil
 }
 
-func (c *followerMicroserviceClient) UnfollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*StringMessage, error) {
-	out := new(StringMessage)
+func (c *followerMicroserviceClient) UnfollowUser(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowerStringMessage, error) {
+	out := new(FollowerStringMessage)
 	err := c.cc.Invoke(ctx, FollowerMicroservice_UnfollowUser_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -94,8 +94,8 @@ func (c *followerMicroserviceClient) GetFollowerSuggestions(ctx context.Context,
 // All implementations must embed UnimplementedFollowerMicroserviceServer
 // for forward compatibility
 type FollowerMicroserviceServer interface {
-	FollowUser(context.Context, *FollowRequest) (*StringMessage, error)
-	UnfollowUser(context.Context, *FollowRequest) (*StringMessage, error)
+	FollowUser(context.Context, *FollowRequest) (*FollowerStringMessage, error)
+	UnfollowUser(context.Context, *FollowRequest) (*FollowerStringMessage, error)
 	GetFollowers(context.Context, *FollowerIdRequest) (*FollowerListResponse, error)
 	GetFollowings(context.Context, *FollowerIdRequest) (*FollowerListResponse, error)
 	GetFollowerSuggestions(context.Context, *FollowerIdRequest) (*FollowerListResponse, error)
@@ -106,10 +106,10 @@ type FollowerMicroserviceServer interface {
 type UnimplementedFollowerMicroserviceServer struct {
 }
 
-func (UnimplementedFollowerMicroserviceServer) FollowUser(context.Context, *FollowRequest) (*StringMessage, error) {
+func (UnimplementedFollowerMicroserviceServer) FollowUser(context.Context, *FollowRequest) (*FollowerStringMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FollowUser not implemented")
 }
-func (UnimplementedFollowerMicroserviceServer) UnfollowUser(context.Context, *FollowRequest) (*StringMessage, error) {
+func (UnimplementedFollowerMicroserviceServer) UnfollowUser(context.Context, *FollowRequest) (*FollowerStringMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnfollowUser not implemented")
 }
 func (UnimplementedFollowerMicroserviceServer) GetFollowers(context.Context, *FollowerIdRequest) (*FollowerListResponse, error) {
